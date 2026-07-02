@@ -1,0 +1,11 @@
+[package]
+name = "libretro"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[lib]
+doctest = false
+
+[build-dependencies]
+bindgen.workspace = true
