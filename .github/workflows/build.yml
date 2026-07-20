@@ -62,10 +62,9 @@ jobs:
       - name: Download syncthing (aarch64)
         run: |
           SYNCTHING_VERSION="v2.0.10"
-          wget -q "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-linux-arm64-${SYNCTHING_VERSION}.tar.gz" -O /tmp/syncthing.tar.gz
-          mkdir -p /tmp/syncthing
-          tar xf /tmp/syncthing.tar.gz -C /tmp/syncthing
-          cp /tmp/syncthing/syncthing-linux-arm64-${SYNCTHING_VERSION}/syncthing /tmp/
+          wget -q "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-linux-arm64-${SYNCTHING_VERSION}.tar.gz" -O /tmp/st.tar.gz
+          mkdir -p /tmp/st && tar xf /tmp/st.tar.gz -C /tmp/st
+          find /tmp/st -name syncthing -exec cp {} /tmp/ \;
 
       - name: Assemble release
         run: |
