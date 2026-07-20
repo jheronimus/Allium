@@ -1,6 +1,7 @@
 # Allium (Minime Fork)
 
-This is a fork of the [Allium](https://github.com/goweiwen/Allium) custom game launcher, adapted for packaging within the Minime Buildroot firmware. 
+This is a fork of [Allium](https://github.com/goweiwen/Allium) maintained for
+[Minime](https://github.com/jheronimus/minime), a minimal Linux/Buildroot
+firmware for Anbernic H700, RK3326, and RK3566 handhelds.
 
-### Disclaimer
-This fork is maintained independently for the Minime project and is **not affiliated with, supported, or endorsed by the original Allium developers**.
+This fork is not affiliated with or supported by the original Allium developers.
