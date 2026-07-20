@@ -52,8 +52,7 @@ jobs:
             --bin screenshot \
             --bin screenshot-viewer \
             --bin say \
-            --bin show \
-            --bin myctl
+            --bin show
 
       - name: Build dufs
         run: |
@@ -91,7 +90,6 @@ jobs:
           cp $BUILD/screenshot release/.tmp_update/bin/
           cp $BUILD/say release/.tmp_update/bin/
           cp $BUILD/show release/.tmp_update/bin/
-          cp $BUILD/myctl release/.tmp_update/bin/
 
           cp $BUILD/activity-tracker "release/apps/Activity Tracker.pak/" || true
           cp $BUILD/screenshot-viewer "release/apps/Screenshot Viewer.pak/" || true
