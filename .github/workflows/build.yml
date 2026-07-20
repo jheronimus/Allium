@@ -39,11 +39,7 @@ jobs:
           apt-get install -y -qq \
             curl ca-certificates build-essential pkg-config \
             crossbuild-essential-arm64 libc6-dev-arm64-cross \
-            cmake git zip unzip patchelf pkg-config-aarch64-linux-gnu \
-            libsdl2-dev:arm64 || true
-          dpkg --add-architecture arm64
-          apt-get update -qq
-          apt-get install -y -qq libsdl2-dev:arm64 || true
+            cmake git zip unzip patchelf libsdl2-dev
 
       - name: Install Rust toolchain
         run: |
