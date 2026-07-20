@@ -25,49 +25,26 @@ permissions:
 jobs:
   build:
     name: Build minime (aarch64)
-    runs-on: ubuntu-latest
-    container:
-      image: debian:bookworm
-    env:
-      CARGO_HOME: /root/.cargo
-      RUSTUP_HOME: /root/.rustup
+    runs-on: ubuntu-24.04-arm
     steps:
-      - name: Install build dependencies
-        run: |
-          set -e
-          apt-get update -qq
-          apt-get install -y -qq \
-            curl ca-certificates build-essential pkg-config \
-            crossbuild-essential-arm64 libc6-dev-arm64-cross \
-            cmake git zip unzip patchelf libsdl2-dev
-
-      - name: Install Rust toolchain
-        run: |
-          export HOME=/root
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-          $CARGO_HOME/bin/rustup target add aarch64-unknown-linux-gnu
-          echo "$CARGO_HOME/bin" >> $GITHUB_PATH
-
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure cargo for aarch64 cross-compilation
-        run: |
-          mkdir -p $CARGO_HOME
-          cat >> $CARGO_HOME/config.toml << 'EOF'
-          [target.aarch64-unknown-linux-gnu]
-          linker = "aarch64-linux-gnu-gcc"
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
 
-          [env]
-          PKG_CONFIG_ALLOW_CROSS = "1"
-          PKG_CONFIG_PATH_aarch64-unknown-linux-gnu = "/usr/lib/aarch64-linux-gnu/pkgconfig"
-          EOF
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            build-essential pkg-config \
+            libsdl2-dev cmake
 
       - name: Build Rust binaries
         run: |
-          . $CARGO_HOME/env
-          cargo build --release --target aarch64-unknown-linux-gnu \
-            --features minime \
+          cargo build --release --features minime \
             --bin alliumd \
             --bin allium-launcher \
             --bin allium-menu \
@@ -78,12 +55,10 @@ jobs:
             --bin show \
             --bin myctl
 
-      - name: Build dufs (aarch64)
+      - name: Build dufs
         run: |
-          . $CARGO_HOME/env
           cd third-party/dufs
-          cargo build --release --target aarch64-unknown-linux-gnu || \
-            echo "dufs build skipped (source may not be available)"
+          cargo build --release || echo "dufs build skipped"
 
       - name: Download syncthing (aarch64)
         run: |
@@ -95,7 +70,7 @@ jobs:
 
       - name: Assemble release
         run: |
-          BUILD=target/aarch64-unknown-linux-gnu/release
+          BUILD=target/release
           STATIC=static
 
           mkdir -p release/.ui/bin
@@ -110,7 +85,6 @@ jobs:
           mkdir -p release/Saves
           mkdir -p release/BIOS
 
-          # Core binaries
           cp $BUILD/alliumd release/.ui/bin/
           cp $BUILD/allium-launcher release/.ui/bin/
           cp $BUILD/allium-menu release/.ui/bin/
@@ -119,26 +93,20 @@ jobs:
           cp $BUILD/show release/.tmp_update/bin/
           cp $BUILD/myctl release/.tmp_update/bin/
 
-          # App paks
-          cp $BUILD/activity-tracker "release/apps/Activity Tracker.pak/"
-          cp $BUILD/screenshot-viewer "release/apps/Screenshot Viewer.pak/"
+          cp $BUILD/activity-tracker "release/apps/Activity Tracker.pak/" || true
+          cp $BUILD/screenshot-viewer "release/apps/Screenshot Viewer.pak/" || true
 
-          # App pak launch scripts from static
           cp -r "$STATIC/Apps/Activity Tracker.pak/." "release/apps/Activity Tracker.pak/" || true
           cp -r "$STATIC/Apps/Screenshot Viewer.pak/." "release/apps/Screenshot Viewer.pak/" || true
           cp -r "$STATIC/Apps/"*.pak release/apps/ 2>/dev/null || true
 
-          # RetroArch + cores
           cp -r "$STATIC/RetroArch/." release/RetroArch/ || true
 
-          # dufs (if built)
-          [ -f third-party/dufs/target/aarch64-unknown-linux-gnu/release/dufs ] && \
-            cp third-party/dufs/target/aarch64-unknown-linux-gnu/release/dufs release/.ui/bin/
+          [ -f third-party/dufs/target/release/dufs ] && \
+            cp third-party/dufs/target/release/dufs release/.ui/bin/
 
-          # syncthing (if downloaded)
           [ -f /tmp/syncthing ] && cp /tmp/syncthing release/.ui/bin/
 
-          # Version stamp
           git rev-parse --short HEAD > release/.ui/version.txt
 
       - name: Package release zip
