@@ -102,48 +102,48 @@ jobs:
           BUILD=target/aarch64-unknown-linux-gnu/release
           STATIC=static
 
-          mkdir -p release/.allium/bin
+          mkdir -p release/.ui/bin
+          mkdir -p release/.ui/config
+          mkdir -p release/.ui/state
+          mkdir -p release/.ui/themes
+          mkdir -p release/.ui/fonts
           mkdir -p release/.tmp_update/bin
-          mkdir -p release/Apps
+          mkdir -p release/apps
           mkdir -p release/RetroArch
           mkdir -p release/Roms
           mkdir -p release/Saves
           mkdir -p release/BIOS
 
           # Core binaries
-          cp $BUILD/alliumd release/.allium/bin/
-          cp $BUILD/allium-launcher release/.allium/bin/
-          cp $BUILD/allium-menu release/.allium/bin/
+          cp $BUILD/alliumd release/.ui/bin/
+          cp $BUILD/allium-launcher release/.ui/bin/
+          cp $BUILD/allium-menu release/.ui/bin/
           cp $BUILD/screenshot release/.tmp_update/bin/
           cp $BUILD/say release/.tmp_update/bin/
           cp $BUILD/show release/.tmp_update/bin/
           cp $BUILD/myctl release/.tmp_update/bin/
 
           # App paks
-          cp $BUILD/activity-tracker "release/Apps/Activity Tracker.pak/"
-          cp $BUILD/screenshot-viewer "release/Apps/Screenshot Viewer.pak/"
+          cp $BUILD/activity-tracker "release/apps/Activity Tracker.pak/"
+          cp $BUILD/screenshot-viewer "release/apps/Screenshot Viewer.pak/"
 
-          # App pak launch scripts
-          cp -r "$STATIC/Apps/Activity Tracker.pak/." "release/Apps/Activity Tracker.pak/" || true
-          cp -r "$STATIC/Apps/Screenshot Viewer.pak/." "release/Apps/Screenshot Viewer.pak/" || true
-          cp -r "$STATIC/Apps/BetterWifi.pak" release/Apps/ || true
-          cp -r "$STATIC/Apps/"*.pak release/Apps/ 2>/dev/null || true
+          # App pak launch scripts from static
+          cp -r "$STATIC/Apps/Activity Tracker.pak/." "release/apps/Activity Tracker.pak/" || true
+          cp -r "$STATIC/Apps/Screenshot Viewer.pak/." "release/apps/Screenshot Viewer.pak/" || true
+          cp -r "$STATIC/Apps/"*.pak release/apps/ 2>/dev/null || true
 
           # RetroArch + cores
           cp -r "$STATIC/RetroArch/." release/RetroArch/ || true
 
           # dufs (if built)
           [ -f third-party/dufs/target/aarch64-unknown-linux-gnu/release/dufs ] && \
-            cp third-party/dufs/target/aarch64-unknown-linux-gnu/release/dufs release/.allium/bin/
+            cp third-party/dufs/target/aarch64-unknown-linux-gnu/release/dufs release/.ui/bin/
 
           # syncthing (if downloaded)
-          [ -f /tmp/syncthing ] && cp /tmp/syncthing release/.allium/bin/
-
-          # Wallpapers
-          cp -r "$STATIC/Wallpapers" release/ || true
+          [ -f /tmp/syncthing ] && cp /tmp/syncthing release/.ui/bin/
 
           # Version stamp
-          git rev-parse --short HEAD > release/.allium/version.txt
+          git rev-parse --short HEAD > release/.ui/version.txt
 
       - name: Package release zip
         run: |
