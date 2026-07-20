@@ -1,0 +1,169 @@
+name: Build Allium (minime)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/**'
+      - 'src/**'
+      - 'Cargo.*'
+      - 'static/**'
+      - '.github/workflows/build.yml'
+      - 'third-party/dufs/**'
+      - 'third-party/RetroArch-patch/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version tag (e.g., v20260720)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build minime (aarch64)
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+    env:
+      CARGO_HOME: /root/.cargo
+      RUSTUP_HOME: /root/.rustup
+    steps:
+      - name: Install build dependencies
+        run: |
+          set -e
+          apt-get update -qq
+          apt-get install -y -qq \
+            curl ca-certificates build-essential pkg-config \
+            crossbuild-essential-arm64 libc6-dev-arm64-cross \
+            cmake git zip unzip patchelf pkg-config-aarch64-linux-gnu \
+            libsdl2-dev:arm64 || true
+          dpkg --add-architecture arm64
+          apt-get update -qq
+          apt-get install -y -qq libsdl2-dev:arm64 || true
+
+      - name: Install Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          . $CARGO_HOME/env
+          rustup target add aarch64-unknown-linux-gnu
+          echo "$CARGO_HOME/bin" >> $GITHUB_PATH
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure cargo for aarch64 cross-compilation
+        run: |
+          mkdir -p $CARGO_HOME
+          cat >> $CARGO_HOME/config.toml << 'EOF'
+          [target.aarch64-unknown-linux-gnu]
+          linker = "aarch64-linux-gnu-gcc"
+
+          [env]
+          PKG_CONFIG_ALLOW_CROSS = "1"
+          PKG_CONFIG_PATH_aarch64-unknown-linux-gnu = "/usr/lib/aarch64-linux-gnu/pkgconfig"
+          EOF
+
+      - name: Build Rust binaries
+        run: |
+          . $CARGO_HOME/env
+          cargo build --release --target aarch64-unknown-linux-gnu \
+            --features minime \
+            --bin alliumd \
+            --bin allium-launcher \
+            --bin allium-menu \
+            --bin activity-tracker \
+            --bin screenshot \
+            --bin screenshot-viewer \
+            --bin say \
+            --bin show \
+            --bin myctl
+
+      - name: Build dufs (aarch64)
+        run: |
+          . $CARGO_HOME/env
+          cd third-party/dufs
+          cargo build --release --target aarch64-unknown-linux-gnu || \
+            echo "dufs build skipped (source may not be available)"
+
+      - name: Download syncthing (aarch64)
+        run: |
+          SYNCTHING_VERSION="v2.0.10"
+          wget -q "https://github.com/syncthing/syncthing/releases/download/${SYNCTHING_VERSION}/syncthing-linux-arm64-${SYNCTHING_VERSION}.tar.gz" -O /tmp/syncthing.tar.gz
+          mkdir -p /tmp/syncthing
+          tar xf /tmp/syncthing.tar.gz -C /tmp/syncthing
+          cp /tmp/syncthing/syncthing-linux-arm64-${SYNCTHING_VERSION}/syncthing /tmp/
+
+      - name: Assemble release
+        run: |
+          BUILD=target/aarch64-unknown-linux-gnu/release
+          STATIC=static
+
+          mkdir -p release/.allium/bin
+          mkdir -p release/.tmp_update/bin
+          mkdir -p release/Apps
+          mkdir -p release/RetroArch
+          mkdir -p release/Roms
+          mkdir -p release/Saves
+          mkdir -p release/BIOS
+
+          # Core binaries
+          cp $BUILD/alliumd release/.allium/bin/
+          cp $BUILD/allium-launcher release/.allium/bin/
+          cp $BUILD/allium-menu release/.allium/bin/
+          cp $BUILD/screenshot release/.tmp_update/bin/
+          cp $BUILD/say release/.tmp_update/bin/
+          cp $BUILD/show release/.tmp_update/bin/
+          cp $BUILD/myctl release/.tmp_update/bin/
+
+          # App paks
+          cp $BUILD/activity-tracker "release/Apps/Activity Tracker.pak/"
+          cp $BUILD/screenshot-viewer "release/Apps/Screenshot Viewer.pak/"
+
+          # App pak launch scripts
+          cp -r "$STATIC/Apps/Activity Tracker.pak/." "release/Apps/Activity Tracker.pak/" || true
+          cp -r "$STATIC/Apps/Screenshot Viewer.pak/." "release/Apps/Screenshot Viewer.pak/" || true
+          cp -r "$STATIC/Apps/BetterWifi.pak" release/Apps/ || true
+          cp -r "$STATIC/Apps/"*.pak release/Apps/ 2>/dev/null || true
+
+          # RetroArch + cores
+          cp -r "$STATIC/RetroArch/." release/RetroArch/ || true
+
+          # dufs (if built)
+          [ -f third-party/dufs/target/aarch64-unknown-linux-gnu/release/dufs ] && \
+            cp third-party/dufs/target/aarch64-unknown-linux-gnu/release/dufs release/.allium/bin/
+
+          # syncthing (if downloaded)
+          [ -f /tmp/syncthing ] && cp /tmp/syncthing release/.allium/bin/
+
+          # Wallpapers
+          cp -r "$STATIC/Wallpapers" release/ || true
+
+          # Version stamp
+          git rev-parse --short HEAD > release/.allium/version.txt
+
+      - name: Package release zip
+        run: |
+          cd release
+          zip -r ../allium-minime-aarch64.zip .
+
+      - name: Publish release
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          files: allium-minime-aarch64.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact
+        if: github.event_name != 'workflow_dispatch' || inputs.version == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: allium-minime-aarch64
+          path: allium-minime-aarch64.zip
+          retention-days: 7
