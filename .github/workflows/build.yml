@@ -98,6 +98,7 @@ jobs:
           cp -r "$STATIC/Apps/"*.pak release/apps/ 2>/dev/null || true
 
           cp -r "$STATIC/RetroArch/." release/RetroArch/ || true
+          [ -d "$STATIC/.minime" ] && cp -r "$STATIC/.minime" release/ || true
 
           [ -f third-party/dufs/target/release/dufs ] && \
             cp third-party/dufs/target/release/dufs release/.ui/bin/
