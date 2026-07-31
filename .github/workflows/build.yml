@@ -24,8 +24,16 @@ permissions:
 
 jobs:
   build:
-    name: Build minime (aarch64)
+    name: Build minime (${{ matrix.libc }})
     runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - libc: musl
+            target: aarch64-unknown-linux-musl
+          - libc: glibc
+            target: aarch64-unknown-linux-gnu
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,18 +41,18 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-unknown-linux-gnu
+          targets: ${{ matrix.target }}
 
       - name: Install build dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
             build-essential pkg-config \
-            libsdl2-dev cmake
+            libsdl2-dev cmake musl-tools musl-dev
 
       - name: Build Rust binaries
         run: |
-          cargo build --release --features minime \
+          cargo build --release --target ${{ matrix.target }} --features minime \
             --bin alliumd \
             --bin allium-launcher \
             --bin allium-menu \
@@ -57,7 +65,7 @@ jobs:
       - name: Build dufs
         run: |
           cd third-party/dufs
-          cargo build --release || echo "dufs build skipped"
+          cargo build --release --target ${{ matrix.target }} || echo "dufs build skipped"
 
       - name: Download syncthing (aarch64)
         run: |
@@ -68,7 +76,7 @@ jobs:
 
       - name: Assemble release
         run: |
-          BUILD=target/release
+          BUILD=target/${{ matrix.target }}/release
           STATIC=static
 
           mkdir -p release/.ui/bin
@@ -100,8 +108,8 @@ jobs:
           cp -r "$STATIC/RetroArch/." release/RetroArch/ || true
           [ -d "$STATIC/.minime" ] && cp -r "$STATIC/.minime" release/ || true
 
-          [ -f third-party/dufs/target/release/dufs ] && \
-            cp third-party/dufs/target/release/dufs release/.ui/bin/
+          [ -f third-party/dufs/target/${{ matrix.target }}/release/dufs ] && \
+            cp third-party/dufs/target/${{ matrix.target }}/release/dufs release/.ui/bin/
 
           [ -f /tmp/syncthing ] && cp /tmp/syncthing release/.ui/bin/
 
@@ -109,15 +117,22 @@ jobs:
 
       - name: Package release zip
         run: |
+          VER="${{ inputs.version }}"
+          VER="${VER#v}"
+          if [ -z "$VER" ]; then
+            VER="$(date -u +%Y%m%d)"
+          fi
+          ZIP_NAME="allium-${VER}-${{ matrix.libc }}-aarch64.zip"
           cd release
-          zip -r ../allium-minime-aarch64.zip .
+          zip -r "../${ZIP_NAME}" .
+          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
 
       - name: Publish release
         if: github.event_name == 'workflow_dispatch' && inputs.version != ''
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.version }}
-          files: allium-minime-aarch64.zip
+          files: ${{ env.ZIP_NAME }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -126,6 +141,6 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || inputs.version == ''
         uses: actions/upload-artifact@v4
         with:
-          name: allium-minime-aarch64
-          path: allium-minime-aarch64.zip
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}
           retention-days: 7
