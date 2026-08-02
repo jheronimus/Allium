@@ -157,13 +157,39 @@ pub fn init_logging() -> Result<()> {
 }
 
 pub fn set_governor(governor: &str) {
-    let path = "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor";
-    if !std::path::Path::new(path).exists() {
-        return;
-    }
-    if let Err(err) = std::fs::write(path, governor) {
-        log::warn!("Failed to set CPU governor to {}: {}", governor, err);
+    let traits = Traits::load().ok();
+    let target_gov = if governor == "performance" {
+        "performance"
     } else {
-        log::info!("Successfully set CPU governor to {}", governor);
+        "schedutil"
+    };
+
+    let gov_path = traits
+        .as_ref()
+        .and_then(|t| t.cpu_governor_path.clone())
+        .unwrap_or_else(|| "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor".into());
+
+    if gov_path.exists() {
+        if let Err(err) = std::fs::write(&gov_path, target_gov) {
+            log::warn!("Failed to set CPU governor to {}: {}", target_gov, err);
+        } else {
+            log::info!("Successfully set CPU governor to {}", target_gov);
+        }
+    }
+
+    let clock = match (governor, traits.as_ref()) {
+        ("powersave", Some(t)) => t.cpu_clock_powersave,
+        ("ondemand" | "schedutil", Some(t)) => t.cpu_clock_normal,
+        ("performance", Some(t)) => t.cpu_clock_performance,
+        _ => None,
+    };
+
+    if let (Some(clock_val), Some(clock_path)) = (
+        clock,
+        traits.as_ref().and_then(|t| t.cpu_clock_path.as_ref()),
+    ) {
+        if clock_path.exists() {
+            let _ = std::fs::write(clock_path, clock_val.to_string());
+        }
     }
 }
