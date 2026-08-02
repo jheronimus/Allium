@@ -86,6 +86,7 @@ fn show(fb: &Framebuffer, frame: &mut [u8], path: impl AsRef<Path>) -> Result<()
     Ok(())
 }
 
+#[allow(clippy::chunks_exact_to_as_chunks)]
 fn darken(frame: &mut [u8], color: Color, alpha: u8) {
     frame.chunks_exact_mut(4).for_each(|pixel| {
         let [b, g, r, _] = pixel else { unreachable!() };

@@ -70,9 +70,11 @@ impl Traits {
             cpu_governor_path: optional_path(&values, "cpu_governor_path"),
             cpu_clock_path: optional_path(&values, "cpu_clock_path"),
             cpu_clock_menu: optional(&values, "cpu_clock_menu").and_then(|s| s.parse().ok()),
-            cpu_clock_powersave: optional(&values, "cpu_clock_powersave").and_then(|s| s.parse().ok()),
+            cpu_clock_powersave: optional(&values, "cpu_clock_powersave")
+                .and_then(|s| s.parse().ok()),
             cpu_clock_normal: optional(&values, "cpu_clock_normal").and_then(|s| s.parse().ok()),
-            cpu_clock_performance: optional(&values, "cpu_clock_performance").and_then(|s| s.parse().ok()),
+            cpu_clock_performance: optional(&values, "cpu_clock_performance")
+                .and_then(|s| s.parse().ok()),
             input_device_names: parse_input_names(&values),
             keycodes: parse_keycodes(&values)?,
         })
