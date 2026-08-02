@@ -35,6 +35,7 @@ pub struct Traits {
     sound_card: Option<String>,
     sound_mixer: Option<String>,
     wifi_interface: Option<String>,
+    pub lid_switch_path: Option<PathBuf>,
     pub cpu_governor_path: Option<PathBuf>,
     pub cpu_clock_path: Option<PathBuf>,
     pub cpu_clock_menu: Option<u32>,
