@@ -128,8 +128,25 @@ pub fn init_logging() -> Result<()> {
     use common::constants::ALLIUM_PLAY_LOG;
     use log::LevelFilter;
     use simple_logger::SimpleLogger;
-    std::fs::create_dir_all(common::constants::ALLIUM_BASE_DIR.join("logs"))?;
-    let _ = common::log::init_hardware_log(&ALLIUM_PLAY_LOG);
+    use std::fs;
+    use std::os::unix::io::AsRawFd;
+
+    if let Some(parent) = ALLIUM_PLAY_LOG.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    if let Ok(log_file) = fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&*ALLIUM_PLAY_LOG)
+    {
+        let fd = log_file.as_raw_fd();
+        unsafe {
+            nix::libc::dup2(fd, nix::libc::STDOUT_FILENO);
+            nix::libc::dup2(fd, nix::libc::STDERR_FILENO);
+        }
+    }
+
     println!(
         "--- Play starting at {} ---",
         chrono::Local::now().format("%Y-%m-%d %H:%M:%S")

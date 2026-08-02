@@ -37,33 +37,18 @@ pub static ALLIUM_SD_ROOT: LazyLock<PathBuf> =
 
 lazy_static! {
     pub static ref ALLIUM_BASE_DIR: PathBuf = PathBuf::from(
-        &env::var("ALLIUM_BASE_DIR").map_or_else(|_| {
-            if cfg!(feature = "minime") {
-                ALLIUM_SD_ROOT.join(".ui")
-            } else {
-                ALLIUM_SD_ROOT.join(".allium")
-            }
-        }, PathBuf::from)
+        &env::var("ALLIUM_BASE_DIR")
+            .map_or_else(|_| ALLIUM_SD_ROOT.join(".allium"), PathBuf::from)
     );
 
     pub static ref ALLIUM_GAMES_DIR: PathBuf = PathBuf::from(
-        &env::var("ALLIUM_GAMES_DIR").map_or_else(|_| {
-            if cfg!(feature = "minime") {
-                ALLIUM_SD_ROOT.join("roms")
-            } else {
-                ALLIUM_SD_ROOT.join("Roms")
-            }
-        }, PathBuf::from)
+        &env::var("ALLIUM_GAMES_DIR")
+            .map_or_else(|_| ALLIUM_SD_ROOT.join("Roms"), PathBuf::from)
     );
 
     pub static ref ALLIUM_APPS_DIR: PathBuf = PathBuf::from(
-        &env::var("ALLIUM_APPS_DIR").map_or_else(|_| {
-            if cfg!(feature = "minime") {
-                ALLIUM_SD_ROOT.join("apps")
-            } else {
-                ALLIUM_SD_ROOT.join("Apps")
-            }
-        }, PathBuf::from)
+        &env::var("ALLIUM_APPS_DIR")
+            .map_or_else(|_| ALLIUM_SD_ROOT.join("Apps"), PathBuf::from)
     );
 
     // Folders
@@ -71,24 +56,13 @@ lazy_static! {
     pub static ref ALLIUM_TOOLS_DIR: PathBuf = ALLIUM_BASE_DIR.join("tools");
     pub static ref ALLIUM_FONTS_DIR: PathBuf = ALLIUM_BASE_DIR.join("fonts");
 
-    pub static ref ALLIUM_THEMES_DIR: PathBuf = {
-        if cfg!(feature = "minime") {
-            ALLIUM_BASE_DIR.join("themes")
-        } else {
-            ALLIUM_SD_ROOT.join("Themes")
-        }
-    };
+    pub static ref ALLIUM_THEMES_DIR: PathBuf = ALLIUM_SD_ROOT.join("Themes");
 
     pub static ref ALLIUM_LOCALES_DIR: PathBuf = ALLIUM_BASE_DIR.join("locales");
     pub static ref ALLIUM_IMAGES_DIR: PathBuf = ALLIUM_BASE_DIR.join("images");
 
-    pub static ref ALLIUM_SCREENSHOTS_DIR: PathBuf = {
-        if cfg!(feature = "minime") {
-            ALLIUM_SD_ROOT.join("saves/screenshots")
-        } else {
-            ALLIUM_SD_ROOT.join("Saves/CurrentProfile/screenshots")
-        }
-    };
+    pub static ref ALLIUM_SCREENSHOTS_DIR: PathBuf =
+        ALLIUM_SD_ROOT.join("Saves/CurrentProfile/screenshots");
 
     // Config
     pub static ref ALLIUM_CONFIG_CONSOLES: PathBuf = ALLIUM_BASE_DIR.join("config/consoles.toml");
@@ -114,13 +88,7 @@ lazy_static! {
     // Database
     pub static ref ALLIUM_DATABASE: PathBuf = env::var("ALLIUM_DATABASE")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            if cfg!(feature = "minime") {
-                ALLIUM_BASE_DIR.join("state/allium.db")
-            } else {
-                ALLIUM_SD_ROOT.join("Saves/CurrentProfile/allium.db")
-            }
-        });
+        .unwrap_or_else(|_| ALLIUM_SD_ROOT.join("Saves/CurrentProfile/allium.db"));
 
     // Binaries & Scripts
     pub static ref ALLIUM_LAUNCHER: PathBuf = ALLIUM_BASE_DIR.join("bin/allium-launcher");
