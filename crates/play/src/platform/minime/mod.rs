@@ -49,7 +49,7 @@ impl MinimePlatform {
             let device = Device::open(path)?;
             if device.name().is_some_and(|name| {
                 traits
-                    .input_device_names
+                    .input_device_names()
                     .iter()
                     .any(|expected| expected == name)
             }) {

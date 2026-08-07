@@ -49,7 +49,7 @@ impl MinimeVideo {
         aspect_ratio: f32,
         scale: ScaleMode,
     ) -> Result<Self> {
-        let mut fb = Framebuffer::new(&traits.video_device)?;
+        let mut fb = Framebuffer::new(&traits.gpu_device)?;
         let format = get_fb_format(fb.var_screen_info.bits_per_pixel)?;
         let width = traits.screen_width;
         let height = traits.screen_height;
