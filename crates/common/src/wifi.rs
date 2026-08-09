@@ -1,6 +1,6 @@
 use std::fs::{self, File};
 use std::io::Write;
-#[cfg(feature = "miyoo")]
+#[cfg(any(feature = "miyoo", feature = "minime"))]
 use tokio::process::Command;
 
 use anyhow::Result;
@@ -330,6 +330,16 @@ pub fn telnet_on() -> Result<()> {
                 e
             })
     });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("rc-service")
+            .args(["telnetd", "start"])
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to start telnetd: {}", e);
+        }
+    });
     Ok(())
 }
 
@@ -349,6 +359,16 @@ pub fn telnet_off() -> Result<()> {
                 log::error!("telnet-off.sh failed: {}", e);
                 e
             })
+    });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("rc-service")
+            .args(["telnetd", "stop"])
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to stop telnetd: {}", e);
+        }
     });
     Ok(())
 }
@@ -370,6 +390,16 @@ pub fn ssh_on() -> Result<()> {
                 e
             })
     });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("rc-service")
+            .args(["dropbear", "start"])
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to start dropbear: {}", e);
+        }
+    });
     Ok(())
 }
 
@@ -389,6 +419,16 @@ pub fn ssh_off() -> Result<()> {
                 log::error!("ssh-off.sh failed: {}", e);
                 e
             })
+    });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("rc-service")
+            .args(["dropbear", "stop"])
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to stop dropbear: {}", e);
+        }
     });
     Ok(())
 }
@@ -410,6 +450,16 @@ pub fn ftp_on() -> Result<()> {
                 e
             })
     });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("rc-service")
+            .args(["ftpd", "start"])
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to start ftpd: {}", e);
+        }
+    });
     Ok(())
 }
 
@@ -429,6 +479,16 @@ pub fn ftp_off() -> Result<()> {
                 log::error!("ftp-off.sh failed: {}", e);
                 e
             })
+    });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("rc-service")
+            .args(["ftpd", "stop"])
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to stop ftpd: {}", e);
+        }
     });
     Ok(())
 }
@@ -489,6 +549,16 @@ pub fn web_file_browser_on() -> Result<()> {
                 e
             })
     });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new(crate::constants::ALLIUM_BASE_DIR.join("bin/dufs"))
+            .args(["--allow-all", "--bind", "0.0.0.0", "--port", "80"])
+            .current_dir(crate::constants::ALLIUM_SD_ROOT.clone())
+            .spawn();
+        if let Err(e) = res {
+            log::error!("failed to spawn dufs: {}", e);
+        }
+    });
     Ok(())
 }
 
@@ -508,6 +578,17 @@ pub fn web_file_browser_off() -> Result<()> {
                 log::error!("dufs-off.sh failed: {}", e);
                 e
             })
+    });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("pkill")
+            .arg("-f")
+            .arg("bin/dufs")
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to stop dufs: {}", e);
+        }
     });
     Ok(())
 }
@@ -529,6 +610,17 @@ pub fn scraper_on() -> Result<()> {
                 e
             })
     });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new(crate::constants::ALLIUM_BASE_DIR.join("bin/collie"))
+            .arg("--bind")
+            .arg("0.0.0.0")
+            .current_dir(crate::constants::ALLIUM_BASE_DIR.clone())
+            .spawn();
+        if let Err(e) = res {
+            log::error!("failed to spawn collie: {}", e);
+        }
+    });
     Ok(())
 }
 
@@ -548,6 +640,17 @@ pub fn scraper_off() -> Result<()> {
                 log::error!("collie-off.sh failed: {}", e);
                 e
             })
+    });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("pkill")
+            .arg("-f")
+            .arg("bin/collie")
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to stop collie: {}", e);
+        }
     });
     Ok(())
 }
@@ -569,6 +672,19 @@ pub fn syncthing_on() -> Result<()> {
                 e
             })
     });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let home = crate::constants::ALLIUM_SD_ROOT.join(".syncthing");
+        let _ = std::fs::create_dir_all(home.join("config"));
+        let res = Command::new(crate::constants::ALLIUM_BASE_DIR.join("bin/syncthing"))
+            .arg("--gui-address=0.0.0.0:8384")
+            .arg(format!("--home={}", home.join("config").display()))
+            .current_dir(crate::constants::ALLIUM_SD_ROOT.clone())
+            .spawn();
+        if let Err(e) = res {
+            log::error!("failed to spawn syncthing: {}", e);
+        }
+    });
     Ok(())
 }
 
@@ -588,6 +704,17 @@ pub fn syncthing_off() -> Result<()> {
                 log::error!("syncthing-off.sh failed: {}", e);
                 e
             })
+    });
+    #[cfg(feature = "minime")]
+    tokio::spawn(async {
+        let res = Command::new("pkill")
+            .arg("-f")
+            .arg("bin/syncthing")
+            .status()
+            .await;
+        if let Err(e) = res {
+            log::error!("failed to stop syncthing: {}", e);
+        }
     });
     Ok(())
 }

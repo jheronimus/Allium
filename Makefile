@@ -158,6 +158,37 @@ $(DIST_DIR)/.allium/bin/syncthing:
 		tar xf "$$TEMP_DIR/syncthing.tar.gz" --directory="$$TEMP_DIR" && \
 		mv "$$TEMP_DIR/syncthing-linux-arm-$(SYNCTHING_VERSION)/syncthing" "$(DIST_DIR)/.allium/bin/syncthing"
 
+# AArch64 bundled tools for Minime.  The miyoo targets above are left
+# untouched; these produce the same .allium/bin binaries for the aarch64
+# (musl native / glibc cross) Minime build.  Pass the same TARGET used for
+# the Allium Rust binaries (aarch64-unknown-linux-musl or
+# aarch64-unknown-linux-gnu).
+
+AARCH64_TARGET ?= aarch64-unknown-linux-musl
+
+$(DIST_DIR)/.allium/bin/dufs-aarch64:
+	mkdir -p $(DIST_DIR)/.allium/bin
+	cd third-party/dufs && cargo build --release --target $(AARCH64_TARGET)
+	cp "third-party/dufs/target/$(AARCH64_TARGET)/release/dufs" "$(DIST_DIR)/.allium/bin/dufs"
+
+$(DIST_DIR)/.allium/bin/collie-aarch64:
+	mkdir -p $(DIST_DIR)/.allium/bin
+	cd third-party/collie/frontend && npm install --frozen-lockfile && npm run build
+	cd third-party/collie && cargo build --release --target $(AARCH64_TARGET)
+	cp "third-party/collie/target/$(AARCH64_TARGET)/release/collie" "$(DIST_DIR)/.allium/bin/collie"
+
+SYNCTHING_ARM64_URL := "https://github.com/syncthing/syncthing/releases/download/$(SYNCTHING_VERSION)/syncthing-linux-arm64-$(SYNCTHING_VERSION).tar.gz"
+$(DIST_DIR)/.allium/bin/syncthing-aarch64:
+	mkdir -p $(DIST_DIR)/.allium/bin
+	TEMP_DIR=$$(mktemp --directory) && \
+		wget "$(SYNCTHING_ARM64_URL)" -O "$$TEMP_DIR/syncthing.tar.gz" && \
+		tar xf "$$TEMP_DIR/syncthing.tar.gz" --directory="$$TEMP_DIR" && \
+		mv "$$TEMP_DIR/syncthing-linux-arm64-$(SYNCTHING_VERSION)/syncthing" "$(DIST_DIR)/.allium/bin/syncthing"
+
+.PHONY: tools-aarch64
+tools-aarch64: $(DIST_DIR)/.allium/bin/dufs-aarch64 $(DIST_DIR)/.allium/bin/collie-aarch64 $(DIST_DIR)/.allium/bin/syncthing-aarch64
+
+
 DROPBEAR := third-party/dropbear
 $(DIST_DIR)/.allium/bin/dropbear:
 	docker run --rm -v $(ROOT_DIR)/$(DROPBEAR):/db:z $(TOOLCHAIN) bash -c \
