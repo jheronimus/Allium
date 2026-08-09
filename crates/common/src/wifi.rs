@@ -123,7 +123,30 @@ impl WiFiSettings {
             })
         }
 
-        #[cfg(not(feature = "miyoo"))]
+        #[cfg(feature = "minime")]
+        {
+            let cfg = crate::constants::ALLIUM_SD_ROOT.join(".minime/config/wifi.cfg");
+            let data = fs::read_to_string(cfg).ok()?;
+
+            let ssid = data
+                .lines()
+                .find_map(|l| l.strip_prefix("SSID="))
+                .map(|s| s.trim().to_string())?;
+            let password = data
+                .lines()
+                .find_map(|l| l.strip_prefix("Passphrase="))
+                .unwrap_or_default()
+                .trim()
+                .to_string();
+
+            Some(Self {
+                ssid,
+                password,
+                ..Default::default()
+            })
+        }
+
+        #[cfg(not(any(feature = "miyoo", feature = "minime")))]
         Some(Self::new())
     }
 
@@ -143,6 +166,29 @@ network={{
                 ssid = self.ssid.replace('"', "\\\""),
                 password = self.password.replace('"', "\\\""),
             )?;
+        }
+
+        #[cfg(feature = "minime")]
+        {
+            // Minime uses iwd, which reads SSID/Passphrase from
+            // .minime/config/wifi.cfg and turns them into .psk profiles.
+            // Write that file, then ask the wifi service to reload so iwd
+            // picks up the new network immediately.
+            let cfg = crate::constants::ALLIUM_SD_ROOT.join(".minime/config/wifi.cfg");
+            if let Some(parent) = cfg.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            let mut file = File::create(cfg)?;
+            write!(
+                file,
+                "SSID={}\nPassphrase={}\n",
+                self.ssid.replace('\n', ""),
+                self.password.replace('\n', "")
+            )?;
+
+            let _ = std::process::Command::new("rc-service")
+                .args(["wifi", "reload"])
+                .status();
         }
         Ok(())
     }
