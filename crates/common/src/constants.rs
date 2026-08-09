@@ -95,11 +95,7 @@ lazy_static! {
     pub static ref ALLIUM_MENU: PathBuf = ALLIUM_BASE_DIR.join("bin/allium-menu");
 
     pub static ref ALLIUM_RETROARCH: PathBuf = {
-        if cfg!(feature = "minime") {
-            ALLIUM_BASE_DIR.join("bin/play")
-        } else {
-            ALLIUM_BASE_DIR.join("cores/retroarch/launch.sh")
-        }
+        ALLIUM_BASE_DIR.join("cores/retroarch/launch.sh")
     };
 }
 

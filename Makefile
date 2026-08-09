@@ -103,6 +103,44 @@ $(DIST_DIR)/RetroArch/retroarch: $(RETROARCH)/bin/retroarch_miyoo354
 $(RETROARCH)/bin/retroarch_miyoo354:
 	docker run --rm -v /$(ROOT_DIR)/$(RETROARCH):/root/workspace $(TOOLCHAIN) bash -c "source /root/.bashrc; make all; chown -R \$$(stat -c '%u:%g' /root/workspace) /root/workspace"
 
+# AArch64 RetroArch for Minime.
+#
+# Uses third-party/RetroArch-patch's `assemble` step to produce the patched
+# vanilla RetroArch source (the 10 patches add the UDP commands Allium's
+# in-game menu depends on), then builds it for aarch64 with the same GLES3/KMS
+# configure flags Minime's images use.  Run natively inside the arm64 musl
+# container, or cross-compile by passing HOST=aarch64-linux-gnu (glibc build).
+# The miyoo (armv7) targets above are left untouched.
+#
+#   make retroarch-aarch64                        # native aarch64 (musl container)
+#   make retroarch-aarch64 HOST=aarch64-linux-gnu # cross aarch64 (glibc container)
+#
+# CC/CXX default to the environment; pass ccache-wrapped compilers from the
+# caller to cache the (large) RetroArch build, e.g.
+#   make retroarch-aarch64 CC="ccache gcc" CXX="ccache g++"
+.PHONY: retroarch-aarch64
+retroarch-aarch64: $(RETROARCH)/build/.is_assembled
+	cd $(RETROARCH)/build && CC="$(CC)" CXX="$(CXX)" ./configure \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--disable-opengl \
+		--enable-egl \
+		--enable-opengles \
+		--enable-opengles3 \
+		--enable-kms \
+		--disable-x11 \
+		--disable-wayland \
+		--enable-alsa \
+		--disable-ffmpeg \
+		--enable-zlib \
+		--enable-floathard \
+		--enable-neon \
+		$(if $(HOST),--host=$(HOST),)
+	$(MAKE) -C $(RETROARCH)/build CC="$(CC)" CXX="$(CXX)"
+	mkdir -p $(DIST_DIR)/RetroArch
+	cp $(RETROARCH)/build/retroarch $(DIST_DIR)/RetroArch/retroarch
+
+
 $(DIST_DIR)/.allium/bin/dufs:
 	cd third-party/dufs && LZMA_API_STATIC=1 cargo zigbuild --release --target=$(TARGET_TRIPLE).$(GLIBC_VERSION)
 	cp "third-party/dufs/target/$(TARGET_TRIPLE)/release/dufs" "$(DIST_DIR)/.allium/bin/"
