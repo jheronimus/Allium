@@ -119,7 +119,11 @@ $(RETROARCH)/bin/retroarch_miyoo354:
 # caller to cache the (large) RetroArch build, e.g.
 #   make retroarch-aarch64 CC="ccache gcc" CXX="ccache g++"
 .PHONY: retroarch-aarch64
-retroarch-aarch64: $(RETROARCH)/build/.is_assembled
+retroarch-aarch64:
+	# RetroArch-patch's assemble step expects its nested RetroArch submodule
+	# checked out; ensure it is (CI recursive checkout does not always).
+	git -C $(RETROARCH) submodule update --init --recursive
+	$(MAKE) -C $(RETROARCH) assemble
 	cd $(RETROARCH)/build && CC="$(CC)" CXX="$(CXX)" ./configure \
 		--prefix=/usr \
 		--sysconfdir=/etc \
