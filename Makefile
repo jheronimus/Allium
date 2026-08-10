@@ -139,8 +139,6 @@ retroarch-aarch64:
 		--enable-alsa \
 		--disable-ffmpeg \
 		--enable-zlib \
-		--enable-floathard \
-		--enable-neon \
 		$(if $(HOST),--host=$(HOST),)
 	$(MAKE) -C $(RETROARCH)/build CC="$(CC)" CXX="$(CXX)"
 	mkdir -p $(DIST_DIR)/RetroArch
