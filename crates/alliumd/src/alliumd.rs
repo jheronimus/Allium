@@ -160,11 +160,20 @@ async fn spawn_main() -> Result<Child> {
     }
     .spawn()?);
 
-    #[cfg(not(feature = "miyoo"))]
+    #[cfg(feature = "simulator")]
     return Ok(Command::new("/bin/sh")
         .arg("-c")
         .arg("make simulator-launcher")
         .spawn()?);
+
+    // minime (and any other non-miyoo/non-simulator build): launch the
+    // launcher directly.  The simulator's `make simulator-launcher` is
+    // strictly a host-side dev convenience and must not run on-device.
+    #[cfg(not(any(feature = "miyoo", feature = "simulator")))]
+    return Ok({
+        use common::constants::ALLIUM_LAUNCHER;
+        Command::new(ALLIUM_LAUNCHER.as_path()).spawn()?
+    });
 }
 
 impl AlliumD<DefaultPlatform> {
