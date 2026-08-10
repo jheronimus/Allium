@@ -105,12 +105,16 @@ $(RETROARCH)/bin/retroarch_miyoo354:
 
 # AArch64 RetroArch for Minime.
 #
-# Uses third-party/RetroArch-patch's `assemble` step to produce the patched
-# vanilla RetroArch source (the 10 patches add the UDP commands Allium's
-# in-game menu depends on), then builds it for aarch64 with the same GLES3/KMS
-# configure flags Minime's images use.  Run natively inside the arm64 musl
-# container, or cross-compile by passing HOST=aarch64-linux-gnu (glibc build).
-# The miyoo (armv7) targets above are left untouched.
+# Builds vanilla RetroArch from third-party/RetroArch-patch's nested
+# submodule, then applies ONLY the patches Allium's in-game menu needs (the
+# UDP command additions: state/disk slot, GET_INFO, GET_PATH, pause/unpause,
+# FF-retain, save-thumbnail cleanup).  The miyoo-only patches (00001 dingux/
+# sdl_dingux, 00002 video filters) and the miyoo src/ additions are skipped.
+# Flags follow ADR 0008/0009: toolchain-default -march (shared armv8-a
+# binary across all three SoCs) plus -ffast-math -fomit-frame-pointer (the
+# proven-safe set).  Run natively inside the arm64 musl container, or
+# cross-compile by passing HOST=aarch64-linux-gnu (glibc build).  The miyoo
+# (armv7) targets above are left untouched.
 #
 #   make retroarch-aarch64                        # native aarch64 (musl container)
 #   make retroarch-aarch64 HOST=aarch64-linux-gnu # cross aarch64 (glibc container)
@@ -118,15 +122,37 @@ $(RETROARCH)/bin/retroarch_miyoo354:
 # CC/CXX default to the environment; pass ccache-wrapped compilers from the
 # caller to cache the (large) RetroArch build, e.g.
 #   make retroarch-aarch64 CC="ccache gcc" CXX="ccache g++"
+
+# Allium-essential patches (skip miyoo-only 00001/00002).
+RETROARCH_AARCH64_PATCHES := \
+	00003_hide_autoload_message.patch \
+	00004_cleanup_save_thumbnails.patch \
+	00006_goweiwen_shorten_ff_and_rewind_messages.patch \
+	00007_goweiwen_add_state_disk_slot_commands.patch \
+	00008_goweiwen_add_GET_INFO_command.patch \
+	00009_goweiwen_retain_fast-forward_state_when_pausing.patch \
+	00010_goweiwen_add_pause_unpause_commands.patch \
+	00011_add_GET_PATH_command.patch
+
 .PHONY: retroarch-aarch64
 retroarch-aarch64:
-	# RetroArch-patch's assemble step expects its nested RetroArch submodule
-	# checked out; ensure it is (CI recursive checkout does not always).
-	# -c safe.directory=* silences git's dubious-ownership guard, which
-	# fires in the build container where the checkout owner differs.
+	# Ensure the nested RetroArch submodule is checked out (CI recursive
+	# checkout does not always).  -c safe.directory='*' silences git's
+	# dubious-ownership guard in the build container.
 	git -c safe.directory='*' -C $(RETROARCH) submodule update --init --recursive
-	$(MAKE) -C $(RETROARCH) assemble
-	cd $(RETROARCH)/build && CC="$(CC)" CXX="$(CXX)" ./configure \
+	# Copy the vanilla source, converting CRLF, then apply the curated
+	# patch list.  Do NOT copy the miyoo src/ additions.
+	rm -rf $(RETROARCH)/build
+	mkdir -p $(RETROARCH)/build
+	cp -r $(RETROARCH)/submodules/RetroArch/* $(RETROARCH)/build/
+	find $(RETROARCH)/build -type f \( -name '*.c' -o -name '*.h' \) -exec sed -i "s/\r\$$//" {} +
+	@for patch in $(RETROARCH_AARCH64_PATCHES); do \
+		echo "Applying $$patch"; \
+		patch -d $(RETROARCH)/build -p1 < $(RETROARCH)/patches/$$patch; \
+	done
+	cd $(RETROARCH)/build && CC="$(CC)" CXX="$(CXX)" \
+		CFLAGS="$(CFLAGS) -ffast-math -fomit-frame-pointer" \
+		./configure \
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--disable-opengl \
