@@ -190,22 +190,30 @@ $(DIST_DIR)/.allium/bin/syncthing:
 
 # AArch64 bundled tools for Minime.  The miyoo targets above are left
 # untouched; these produce the same .allium/bin binaries for the aarch64
-# (musl native / glibc cross) Minime build.  Pass the same TARGET used for
-# the Allium Rust binaries (aarch64-unknown-linux-musl or
-# aarch64-unknown-linux-gnu).
+# (musl native / glibc cross) Minime build.
+#
+# AARCH64_TARGET is the Rust target triple.  When empty (default), cargo
+# builds with its native/default target — matching how the musl container
+# builds alliumd etc. (it has no separate --target std installed).  Pass
+# AARCH64_TARGET=aarch64-unknown-linux-gnu for the glibc cross build, which
+# compiles everything with an explicit target.
+AARCH64_TARGET ?=
 
-AARCH64_TARGET ?= aarch64-unknown-linux-musl
+# TARGET_FLAG expands to "--target <triple>" only when AARCH64_TARGET is set,
+# and CARGO_OUT_DIR is the release dir cargo writes the binary into.
+TARGET_FLAG = $(if $(AARCH64_TARGET),--target $(AARCH64_TARGET))
+CARGO_OUT_DIR = $(if $(AARCH64_TARGET),$(AARCH64_TARGET)/release,release)
 
 $(DIST_DIR)/.allium/bin/dufs-aarch64:
 	mkdir -p $(DIST_DIR)/.allium/bin
-	cd third-party/dufs && cargo build --release --target $(AARCH64_TARGET)
-	cp "third-party/dufs/target/$(AARCH64_TARGET)/release/dufs" "$(DIST_DIR)/.allium/bin/dufs"
+	cd third-party/dufs && cargo build --release $(TARGET_FLAG)
+	cp "third-party/dufs/target/$(CARGO_OUT_DIR)/dufs" "$(DIST_DIR)/.allium/bin/dufs"
 
 $(DIST_DIR)/.allium/bin/collie-aarch64:
 	mkdir -p $(DIST_DIR)/.allium/bin
 	cd third-party/collie/frontend && npm install --frozen-lockfile && npm run build
-	cd third-party/collie && cargo build --release --target $(AARCH64_TARGET)
-	cp "third-party/collie/target/$(AARCH64_TARGET)/release/collie" "$(DIST_DIR)/.allium/bin/collie"
+	cd third-party/collie && cargo build --release $(TARGET_FLAG)
+	cp "third-party/collie/target/$(CARGO_OUT_DIR)/collie" "$(DIST_DIR)/.allium/bin/collie"
 
 SYNCTHING_ARM64_URL := "https://github.com/syncthing/syncthing/releases/download/$(SYNCTHING_VERSION)/syncthing-linux-arm64-$(SYNCTHING_VERSION).tar.gz"
 $(DIST_DIR)/.allium/bin/syncthing-aarch64:
