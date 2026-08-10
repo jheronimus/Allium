@@ -122,7 +122,9 @@ $(RETROARCH)/bin/retroarch_miyoo354:
 retroarch-aarch64:
 	# RetroArch-patch's assemble step expects its nested RetroArch submodule
 	# checked out; ensure it is (CI recursive checkout does not always).
-	git -C $(RETROARCH) submodule update --init --recursive
+	# -c safe.directory=* silences git's dubious-ownership guard, which
+	# fires in the build container where the checkout owner differs.
+	git -c safe.directory='*' -C $(RETROARCH) submodule update --init --recursive
 	$(MAKE) -C $(RETROARCH) assemble
 	cd $(RETROARCH)/build && CC="$(CC)" CXX="$(CXX)" ./configure \
 		--prefix=/usr \
