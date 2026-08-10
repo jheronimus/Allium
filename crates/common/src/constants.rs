@@ -91,8 +91,23 @@ lazy_static! {
         .unwrap_or_else(|_| ALLIUM_SD_ROOT.join("Saves/CurrentProfile/allium.db"));
 
     // Binaries & Scripts
-    pub static ref ALLIUM_LAUNCHER: PathBuf = ALLIUM_BASE_DIR.join("bin/allium-launcher");
-    pub static ref ALLIUM_MENU: PathBuf = ALLIUM_BASE_DIR.join("bin/allium-menu");
+    // On minime the Allium binaries (alliumd/launcher/menu) are staged into
+    // .ui/bin (mkui.sh); the miyoo upstream layout keeps them in
+    // .allium/bin.  Point the launcher/menu at .ui/bin for minime.
+    pub static ref ALLIUM_LAUNCHER: PathBuf = {
+        if cfg!(feature = "minime") {
+            ALLIUM_SD_ROOT.join(".ui/bin/allium-launcher")
+        } else {
+            ALLIUM_BASE_DIR.join("bin/allium-launcher")
+        }
+    };
+    pub static ref ALLIUM_MENU: PathBuf = {
+        if cfg!(feature = "minime") {
+            ALLIUM_SD_ROOT.join(".ui/bin/allium-menu")
+        } else {
+            ALLIUM_BASE_DIR.join("bin/allium-menu")
+        }
+    };
 
     pub static ref ALLIUM_RETROARCH: PathBuf = {
         ALLIUM_BASE_DIR.join("cores/retroarch/launch.sh")
