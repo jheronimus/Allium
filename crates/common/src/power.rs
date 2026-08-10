@@ -13,6 +13,15 @@ pub struct PowerSettings {
     pub lid_close_action: PowerButtonAction,
     pub auto_sleep_when_charging: bool,
     pub auto_sleep_duration_minutes: i32,
+    /// Show the built-in charging screen (suspend + charging overlay) when
+    /// the device is plugged in.  Minime's own charging handling disables
+    /// this so Allium boots normally on charge.
+    #[serde(default = "default_true")]
+    pub charging_screen: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, FromRepr, Default)]
@@ -42,6 +51,7 @@ impl Default for PowerSettings {
             power_button_action: PowerButtonAction::Suspend,
             auto_sleep_when_charging: true,
             auto_sleep_duration_minutes: 5,
+            charging_screen: true,
         }
     }
 }

@@ -261,10 +261,11 @@ impl AlliumD<DefaultPlatform> {
 
             let mut battery_interval = Instant::now();
 
-            // If battery is charging, suspend.
+            // If battery is charging, suspend (unless the charging screen
+            // is disabled — Minime's own charging handling takes over).
             let mut battery = self.platform.battery()?;
             battery.update()?;
-            if battery.charging() {
+            if battery.charging() && self.power_settings.charging_screen {
                 self.handle_charging().await?;
             }
 
