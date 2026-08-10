@@ -180,8 +180,8 @@ $(DIST_DIR)/.allium/bin/collie:
 	cd third-party/collie && cargo zigbuild --release --target=$(TARGET_TRIPLE).$(GLIBC_VERSION)
 	cp "third-party/collie/target/$(TARGET_TRIPLE)/release/collie" "$(DIST_DIR)/.allium/bin/"
 
-SYNCTHING_VERSION := "v2.0.10"
-SYNCTHING_URL := "https://github.com/syncthing/syncthing/releases/download/$(SYNCTHING_VERSION)/syncthing-linux-arm-$(SYNCTHING_VERSION).tar.gz"
+SYNCTHING_VERSION := v2.0.10
+SYNCTHING_URL := https://github.com/syncthing/syncthing/releases/download/$(SYNCTHING_VERSION)/syncthing-linux-arm-$(SYNCTHING_VERSION).tar.gz
 $(DIST_DIR)/.allium/bin/syncthing:
 	TEMP_DIR=$$(mktemp --directory) && \
 		wget "$(SYNCTHING_URL)" -O "$$TEMP_DIR/syncthing.tar.gz" && \
@@ -211,11 +211,15 @@ $(DIST_DIR)/.allium/bin/dufs-aarch64:
 
 $(DIST_DIR)/.allium/bin/collie-aarch64:
 	mkdir -p $(DIST_DIR)/.allium/bin
-	cd third-party/collie/frontend && npm install --frozen-lockfile && npm run build
+	# collie's frontend pins @sveltejs/vite-plugin-svelte@4 which requires
+	# vite ^5, but its package.json requests ^6 — an upstream lockfile
+	# mismatch.  Pin vite to ^5 so the frontend resolves, then build the
+	# backend (which embeds frontend/dist via rust-embed).
+	cd third-party/collie/frontend && npm install vite@^5.0.0 --no-save && npm run build
 	cd third-party/collie && cargo build --release $(TARGET_FLAG)
 	cp "third-party/collie/target/$(CARGO_OUT_DIR)/collie" "$(DIST_DIR)/.allium/bin/collie"
 
-SYNCTHING_ARM64_URL := "https://github.com/syncthing/syncthing/releases/download/$(SYNCTHING_VERSION)/syncthing-linux-arm64-$(SYNCTHING_VERSION).tar.gz"
+SYNCTHING_ARM64_URL := https://github.com/syncthing/syncthing/releases/download/$(SYNCTHING_VERSION)/syncthing-linux-arm64-$(SYNCTHING_VERSION).tar.gz
 $(DIST_DIR)/.allium/bin/syncthing-aarch64:
 	mkdir -p $(DIST_DIR)/.allium/bin
 	TEMP_DIR=$$(mktemp --directory) && \
@@ -224,7 +228,11 @@ $(DIST_DIR)/.allium/bin/syncthing-aarch64:
 		mv "$$TEMP_DIR/syncthing-linux-arm64-$(SYNCTHING_VERSION)/syncthing" "$(DIST_DIR)/.allium/bin/syncthing"
 
 .PHONY: tools-aarch64
-tools-aarch64: $(DIST_DIR)/.allium/bin/dufs-aarch64 $(DIST_DIR)/.allium/bin/collie-aarch64 $(DIST_DIR)/.allium/bin/syncthing-aarch64
+# Build each tool independently so one failure does not block the others.
+tools-aarch64:
+	@$(MAKE) --no-print-directory $(DIST_DIR)/.allium/bin/dufs-aarch64 || true
+	@$(MAKE) --no-print-directory $(DIST_DIR)/.allium/bin/collie-aarch64 || true
+	@$(MAKE) --no-print-directory $(DIST_DIR)/.allium/bin/syncthing-aarch64 || true
 
 
 DROPBEAR := third-party/dropbear
