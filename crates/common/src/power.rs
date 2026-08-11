@@ -49,7 +49,11 @@ impl Default for PowerSettings {
         Self {
             lid_close_action: PowerButtonAction::Shutdown,
             power_button_action: PowerButtonAction::Suspend,
-            auto_sleep_when_charging: true,
+            // Default to NOT auto-sleeping while charging: MinUI never
+            // auto-sleeps/powers off on charge, and powering off mid-charge
+            // is never desirable.  Users can still opt in via the power
+            // settings UI (auto_sleep_when_charging is a user-facing option).
+            auto_sleep_when_charging: false,
             auto_sleep_duration_minutes: 5,
             charging_screen: true,
         }
