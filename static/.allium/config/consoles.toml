@@ -260,7 +260,7 @@ extensions = ["gbc"]
 [[consoles]]
 name = "Game Boy Advance"
 cores = ["gpsp", "mgba", "vbam", "vba_next"]
-patterns = ["GBA"]
+patterns = ["GBA", "MGBA"]
 extensions = ["gba"]
 
 [[consoles]]
@@ -297,7 +297,7 @@ cores = [
     "snes9x2002",
     "chimerasnes",
 ]
-patterns = ["SFC", "SNES"]
+patterns = ["SFC", "SNES", "SUPA"]
 extensions = ["sfc", "smc", "swc", "fig"]
 
 [[consoles]]
@@ -314,7 +314,7 @@ patterns = ["VIDEOPAC"]
 [[consoles]]
 name = "PICO-8"
 cores = ["fake08", "retro8"]
-patterns = ["PICO"]
+patterns = ["PICO", "P8"]
 extensions = ["p8", "png"]
 
 [[consoles]]
@@ -355,8 +355,14 @@ extensions = ["gen", "smd", "md"]
 [[consoles]]
 name = "Master System"
 cores = ["picodrive", "genesis_plus_gx"]
-patterns = ["MS"]
+patterns = ["MS", "SMS"]
 extensions = ["sms"]
+
+[[consoles]]
+name = "Sega Saturn"
+cores = ["yabasanshiro"]
+patterns = ["SAT"]
+extensions = ["cue", "chd", "iso", "bin"]
 
 [[consoles]]
 name = "SG-1000"
@@ -387,8 +393,8 @@ patterns = ["NEOCD"]
 
 [[consoles]]
 name = "Neo Geo Pocket Color"
-cores = ["mednafen_ngp"]
-patterns = ["NGP", "NGC"]
+cores = ["race", "mednafen_ngp"]
+patterns = ["NGP", "NGC", "NGPC"]
 extensions = ["ngp", "ngc"]
 
 [[consoles]]
