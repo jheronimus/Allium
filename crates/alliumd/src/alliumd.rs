@@ -341,7 +341,11 @@ impl AlliumD<DefaultPlatform> {
                         }
                     }
                     _ = sigint.recv() => self.handle_quit().await?,
-                    _ = sigterm.recv() => self.handle_quit().await?,
+                    // SIGTERM is the OpenRC `ui` service stop signal (used by
+                    // the OTA updater before swapping the UI payload). Stop the
+                    // process cleanly instead of powering off: handle_quit()
+                    // ends in platform.shutdown() -> poweroff.
+                    _ = sigterm.recv() => self.handle_stop().await?,
                 }
             }
         }
@@ -597,6 +601,32 @@ impl AlliumD<DefaultPlatform> {
         self.platform.shutdown()?;
 
         Ok(())
+    }
+
+    // Stop the process cleanly on SIGTERM (the OpenRC `ui` service stop
+    // signal, e.g. during an OTA update).  Same state save / child teardown
+    // as handle_quit, but exits the process instead of powering the device
+    // off — poweroff is only for user-initiated shutdown.
+    #[cfg(unix)]
+    async fn handle_stop(&mut self) -> Result<()> {
+        if self.is_terminating {
+            return Ok(());
+        }
+
+        debug!("stopping, saving state");
+
+        self.state.time = Utc::now();
+        self.state.save()?;
+
+        if self.is_ingame() {
+            self.update_play_time()?;
+        }
+
+        terminate(&mut self.main).await?;
+
+        self.is_terminating = true;
+
+        std::process::exit(0)
     }
 
     #[allow(unused)]
