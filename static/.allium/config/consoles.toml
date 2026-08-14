@@ -8,6 +8,12 @@
 # build-cores artifact.
 
 [[consoles]]
+name = "Atari 2600"
+cores = ["stella", "stella2014"]
+patterns = ["ATARI", "A26", "A2600"]
+extensions = ["a26", "bin"]
+
+[[consoles]]
 name = "Atari Lynx"
 cores = ["handy", "mednafen_lynx"]
 patterns = ["LYNX"]
