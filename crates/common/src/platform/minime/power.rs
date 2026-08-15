@@ -69,7 +69,7 @@ fn open_input_by_name(expected_name: &str) -> Result<Option<Device>> {
 }
 
 /// Set CPU speed level. 0=menu, 1=powersave, 2=normal, 3=performance.
-/// Mirrors the MinUI HAL semantics from ADR 0005: levels 0-2 use schedutil
+/// Mirrors the MinUI HAL semantics from ADR 0018: levels 0-2 use schedutil
 /// with a max-frequency cap, level 3 pins the performance governor.
 #[allow(dead_code)]
 pub fn set_cpu_speed(traits: &Traits, speed: i32) -> Result<()> {

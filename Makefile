@@ -110,7 +110,7 @@ $(RETROARCH)/bin/retroarch_miyoo354:
 # UDP command additions: state/disk slot, GET_INFO, GET_PATH, pause/unpause,
 # FF-retain, save-thumbnail cleanup).  The miyoo-only patches (00001 dingux/
 # sdl_dingux, 00002 video filters) and the miyoo src/ additions are skipped.
-# Flags follow ADR 0008/0009: toolchain-default -march (shared armv8-a
+# Flags follow ADR 0005/0006: toolchain-default -march (shared armv8-a
 # binary across all three SoCs) plus -ffast-math -fomit-frame-pointer (the
 # proven-safe set).  Run natively inside the arm64 musl container, or
 # cross-compile by passing HOST=aarch64-linux-gnu (glibc build).  The miyoo
