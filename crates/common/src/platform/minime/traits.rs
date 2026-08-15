@@ -60,6 +60,7 @@ pub struct Traits {
     pub screen_width: u32,
     pub screen_height: u32,
     pub screen_rotation: u32,
+    pub screen_rotation_kernel: Option<u32>,
     pub screen_aspect: Aspect,
     pub screen_refresh_rate: u32,
     pub screen_backlight_path: Option<PathBuf>,
@@ -171,6 +172,8 @@ impl Traits {
             screen_width: required_number(&values, "screen_width")?,
             screen_height: required_number(&values, "screen_height")?,
             screen_rotation: number(&values, "screen_rotation").unwrap_or(0),
+            screen_rotation_kernel: optional(&values, "screen_rotation_kernel")
+                .and_then(|s| s.parse().ok()),
             screen_aspect: parse_aspect(values.get("screen_aspect")).unwrap_or_else(|| {
                 derive_aspect((
                     required_number(&values, "screen_width").unwrap_or_default(),
@@ -422,6 +425,7 @@ const KNOWN_KEYS: &[&str] = &[
     "screen_width",
     "screen_height",
     "screen_rotation",
+    "screen_rotation_kernel",
     "screen_aspect",
     "screen_refresh_rate",
     "screen_backlight_path",
