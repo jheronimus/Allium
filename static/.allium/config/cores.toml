@@ -404,6 +404,14 @@ name = "X1"
 retroarch = "xrick"
 name = "XRick"
 
+[cores.yabasanshiro]
+retroarch = "yabasanshiro"
+name = "YabaSanshiro"
+
+[cores.zx81]
+retroarch = "xrick"
+name = "XRick"
+
 [cores.zx81]
 retroarch = "zx81"
 name = "ZX81"
