@@ -51,7 +51,7 @@ impl MinimePlatform {
                 traits
                     .input_device_names()
                     .iter()
-                    .any(|expected| expected == name)
+                    .any(|expected| *expected == name)
             }) {
                 inputs.push(device.into_event_stream()?);
             }

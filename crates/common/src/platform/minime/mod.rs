@@ -1,5 +1,6 @@
 mod audio;
 mod battery;
+mod drm;
 mod framebuffer;
 mod input;
 mod power;
@@ -9,16 +10,107 @@ pub mod traits;
 use anyhow::Result;
 use async_trait::async_trait;
 use std::os::unix::process::CommandExt;
+use tiny_skia::{PixmapMut, PixmapRef};
 
 use crate::battery::Battery;
+use crate::display::Display;
+use crate::display::color::Color;
 use crate::display::settings::DisplaySettings;
+use crate::geom::Rect;
 use crate::platform::minime::battery::MinimeBattery;
-use crate::platform::minime::framebuffer::MinimeDisplay;
+use crate::platform::minime::drm::MinimeDrmDisplay;
+use crate::platform::minime::framebuffer::MinimeDisplay as MinimeFbDisplay;
 use crate::platform::minime::input::MinimeInput;
-use crate::platform::minime::traits::Traits;
 use crate::platform::{KeyEvent, Platform};
 
-pub use traits::Aspect;
+pub use traits::{Aspect, Traits};
+
+pub enum MinimeDisplay {
+    Drm(MinimeDrmDisplay),
+    Fb(MinimeFbDisplay),
+}
+
+impl MinimeDisplay {
+    pub fn new(traits: &Traits) -> Result<Self> {
+        match MinimeDrmDisplay::new(traits) {
+            Ok(drm) => Ok(Self::Drm(drm)),
+            Err(err) => {
+                log::warn!(
+                    "DRM display initialization failed ({err}), falling back to framebuffer"
+                );
+                MinimeFbDisplay::new(traits).map(Self::Fb)
+            }
+        }
+    }
+}
+
+impl Display for MinimeDisplay {
+    fn width(&self) -> u32 {
+        match self {
+            Self::Drm(d) => d.width(),
+            Self::Fb(d) => d.width(),
+        }
+    }
+
+    fn height(&self) -> u32 {
+        match self {
+            Self::Drm(d) => d.height(),
+            Self::Fb(d) => d.height(),
+        }
+    }
+
+    fn pixmap(&self) -> PixmapRef<'_> {
+        match self {
+            Self::Drm(d) => d.pixmap(),
+            Self::Fb(d) => d.pixmap(),
+        }
+    }
+
+    fn pixmap_mut(&mut self) -> PixmapMut<'_> {
+        match self {
+            Self::Drm(d) => d.pixmap_mut(),
+            Self::Fb(d) => d.pixmap_mut(),
+        }
+    }
+
+    fn map_pixels<F>(&mut self, f: F) -> Result<()>
+    where
+        F: FnMut(Color) -> Color,
+    {
+        match self {
+            Self::Drm(d) => d.map_pixels(f),
+            Self::Fb(d) => d.map_pixels(f),
+        }
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        match self {
+            Self::Drm(d) => d.flush(),
+            Self::Fb(d) => d.flush(),
+        }
+    }
+
+    fn save(&mut self) -> Result<()> {
+        match self {
+            Self::Drm(d) => d.save(),
+            Self::Fb(d) => d.save(),
+        }
+    }
+
+    fn load(&mut self, rect: Rect) -> Result<()> {
+        match self {
+            Self::Drm(d) => d.load(rect),
+            Self::Fb(d) => d.load(rect),
+        }
+    }
+
+    fn pop(&mut self) -> bool {
+        match self {
+            Self::Drm(d) => d.pop(),
+            Self::Fb(d) => d.pop(),
+        }
+    }
+}
 
 pub struct MinimePlatform {
     traits: Traits,
