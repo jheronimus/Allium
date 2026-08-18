@@ -10,31 +10,31 @@
 [[consoles]]
 name = "Atari 2600"
 cores = ["stella", "stella2014"]
-patterns = ["ATARI", "A26", "A2600"]
+patterns = ["ATARI", "A26", "A2600", "atari2600"]
 extensions = ["a26", "bin"]
 
 [[consoles]]
 name = "Atari Lynx"
 cores = ["handy", "mednafen_lynx"]
-patterns = ["LYNX"]
+patterns = ["LYNX", "atarilynx"]
 extensions = ["lnx"]
 
 [[consoles]]
 name = "Game Boy"
 cores = ["gambatte", "tgbdual", "gearboy", "mgba", "vbam", "vba_next"]
-patterns = ["GB", "TGB_Dual"]
+patterns = ["GB", "TGB_Dual", "gb"]
 extensions = ["gb"]
 
 [[consoles]]
 name = "Game Boy Color"
 cores = ["gambatte", "tgbdual", "gearboy", "mgba", "vbam", "vba_next"]
-patterns = ["GBC"]
+patterns = ["GBC", "gbc"]
 extensions = ["gbc"]
 
 [[consoles]]
 name = "Game Boy Advance"
 cores = ["gpsp", "mgba", "vbam", "vba_next"]
-patterns = ["GBA", "MGBA"]
+patterns = ["GBA", "MGBA", "gba"]
 extensions = ["gba"]
 
 [[consoles]]
@@ -45,7 +45,7 @@ patterns = ["SGB"]
 [[consoles]]
 name = "NES"
 cores = ["fceumm", "nestopia"]
-patterns = ["FC", "NES"]
+patterns = ["FC", "NES", "famicom", "nes"]
 extensions = ["nes", "unif", "unf"]
 
 [[consoles]]
@@ -59,19 +59,19 @@ cores = [
     "snes9x2002",
     "chimerasnes",
 ]
-patterns = ["SFC", "SNES", "SUPA"]
+patterns = ["SFC", "SNES", "snesna", "SUPA", "snes"]
 extensions = ["sfc", "smc", "swc", "fig"]
 
 [[consoles]]
 name = "Virtual Boy"
 cores = ["mednafen_vb"]
-patterns = ["VB"]
+patterns = ["VB", "virtualboy"]
 extensions = ["vb", "vboy"]
 
 [[consoles]]
 name = "PICO-8"
 cores = ["fake08", "retro8"]
-patterns = ["PICO", "P8"]
+patterns = ["PICO", "pico8", "P8"]
 extensions = ["p8", "png"]
 
 [[consoles]]
@@ -83,61 +83,61 @@ extensions = ["port"]
 [[consoles]]
 name = "Game Gear"
 cores = ["picodrive", "genesis_plus_gx"]
-patterns = ["GG"]
+patterns = ["GG", "gamegear"]
 extensions = ["gg"]
 
 [[consoles]]
 name = "Genesis"
 cores = ["picodrive", "genesis_plus_gx"]
-patterns = ["MD"]
+patterns = ["MD", "megadrive", "genesis"]
 extensions = ["gen", "smd", "md"]
 
 [[consoles]]
 name = "Master System"
 cores = ["picodrive", "genesis_plus_gx"]
-patterns = ["MS", "SMS"]
+patterns = ["MS", "mastersystem", "mark3", "SMS"]
 extensions = ["sms"]
 
 [[consoles]]
 name = "Sega Saturn"
 cores = ["yabasanshiro"]
-patterns = ["SAT"]
+patterns = ["SAT", "saturn"]
 extensions = ["cue", "chd", "iso", "bin"]
 
 [[consoles]]
 name = "Neo Geo Pocket Color"
 cores = ["race", "mednafen_ngp"]
-patterns = ["NGP", "NGC", "NGPC"]
+patterns = ["NGP", "NGC", "ngpc", "NGPC"]
 extensions = ["ngp", "ngc"]
 
 [[consoles]]
 name = "PlayStation"
 cores = ["pcsx_rearmed"]
-patterns = ["PSX", "PS", "PS1"]
+patterns = ["PSX", "PS", "PS1", "psx"]
 extensions = ["mdf", "pbp", "toc", "cbn"]
 
 [[consoles]]
 name = "TurboGrafx-16"
 cores = ["mednafen_pce_fast"]
-patterns = ["PCE"]
+patterns = ["PCE", "tg16", "pcengine"]
 extensions = ["pce"]
 
 [[consoles]]
 name = "WonderSwanColor"
 cores = ["mednafen_wswan"]
-patterns = ["WS"]
+patterns = ["WS", "wswanc"]
 extensions = ["ws", "pc2"]
 
 [[consoles]]
 name = "Pokémon Mini"
 cores = ["pokemini"]
-patterns = ["POKE", "PKM"]
+patterns = ["POKE", "PKM", "pokemini"]
 extensions = ["min"]
 
 [[consoles]]
 name = "Nintendo DS"
 cores = ["drastic"]
-patterns = ["NDS", "DS"]
+patterns = ["NDS", "DS", "nds"]
 extensions = ["nds"]
 
 [[consoles]]
