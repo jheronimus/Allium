@@ -107,8 +107,10 @@ pub struct Traits {
 
     // [input]
     pub input_gamepad_device_name: String,
+    pub input_stick_device_name: Option<String>,
     pub input_power_device_name: String,
     pub input_volume_device_name: String,
+    pub input_menu_device_name: Option<String>,
     pub input_lid_device_name: Option<String>,
     pub input_rumble_device_name: Option<String>,
     pub input_touch: bool,
@@ -222,8 +224,10 @@ impl Traits {
             audio_mic: optional(&values, "audio_mic").is_some_and(|s| s == "1"),
 
             input_gamepad_device_name: required(&values, "input_gamepad_device_name")?.to_owned(),
+            input_stick_device_name: optional(&values, "input_stick_device_name"),
             input_power_device_name: required(&values, "input_power_device_name")?.to_owned(),
             input_volume_device_name: required(&values, "input_volume_device_name")?.to_owned(),
+            input_menu_device_name: optional(&values, "input_menu_device_name"),
             input_lid_device_name: optional(&values, "input_lid_device_name"),
             input_rumble_device_name: optional(&values, "input_rumble_device_name"),
             input_touch: optional(&values, "input_touch").is_some_and(|s| s == "1"),
@@ -263,14 +267,20 @@ impl Traits {
         Ok(resolve_hdmi_connector(traits))
     }
     /// The set of evdev device names the UI should open for game input:
-    /// gamepad, power, and volume.
+    /// gamepad, power, volume, stick, and menu.
     pub fn input_device_names(&self) -> Vec<&str> {
-        [
+        let mut names = vec![
             self.input_gamepad_device_name.as_str(),
             self.input_power_device_name.as_str(),
             self.input_volume_device_name.as_str(),
-        ]
-        .to_vec()
+        ];
+        if let Some(stick) = self.input_stick_device_name.as_deref() {
+            names.push(stick);
+        }
+        if let Some(menu) = self.input_menu_device_name.as_deref() {
+            names.push(menu);
+        }
+        names
     }
 
     /// The evdev name of the lid switch device, if the device has a clamshell.
@@ -459,8 +469,10 @@ const KNOWN_KEYS: &[&str] = &[
     "audio_jack_device_name",
     "audio_mic",
     "input_gamepad_device_name",
+    "input_stick_device_name",
     "input_power_device_name",
     "input_volume_device_name",
+    "input_menu_device_name",
     "input_lid_device_name",
     "input_rumble_device_name",
     "input_touch",
