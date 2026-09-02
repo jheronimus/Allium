@@ -213,7 +213,7 @@ impl Traits {
             gpu_device: required(&values, "gpu_device")?.to_owned(),
             gpu_device2: optional(&values, "gpu_device2"),
             gpu_hdmi_connector: optional(&values, "gpu_hdmi_connector"),
-            gpu_hdmi_state_path: None,
+            gpu_hdmi_state_path: optional_path(&values, "gpu_hdmi_state_path"),
             gpu_driver: optional(&values, "gpu_driver"),
             gpu_clock_min: optional(&values, "gpu_clock_min").and_then(|s| s.parse().ok()),
             gpu_clock_max: optional(&values, "gpu_clock_max").and_then(|s| s.parse().ok()),
@@ -319,6 +319,9 @@ const NA: &str = "na";
 /// and pick the connector whose suffix matches. Returns `traits` unchanged
 /// when no connector is configured or none is found.
 fn resolve_hdmi_connector(mut traits: Traits) -> Traits {
+    if traits.gpu_hdmi_state_path.is_some() {
+        return traits;
+    }
     let Some(connector) = traits.gpu_hdmi_connector.clone() else {
         return traits;
     };
@@ -461,6 +464,7 @@ const KNOWN_KEYS: &[&str] = &[
     "gpu_device",
     "gpu_device2",
     "gpu_hdmi_connector",
+    "gpu_hdmi_state_path",
     "gpu_driver",
     "gpu_clock_min",
     "gpu_clock_max",
