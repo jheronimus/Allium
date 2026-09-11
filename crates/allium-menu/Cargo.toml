@@ -1,6 +1,6 @@
 [package]
 name = "allium-menu"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2024"
 include = ["/src"]
 license = "MIT"
@@ -19,7 +19,8 @@ path = "src/main.rs"
 simulator = ["common/simulator"]
 miyoo = ["common/miyoo"]
 minime = ["common/minime"]
-debug-ui = []
+debug-ui = ["common/debug-ui"] # Draw bounding boxes
+
 
 [dependencies]
 anyhow.workspace = true

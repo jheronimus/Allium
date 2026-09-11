@@ -18,6 +18,8 @@ pub struct PowerSettings {
     /// this so Allium boots normally on charge.
     #[serde(default = "default_true")]
     pub charging_screen: bool,
+    #[serde(default)]
+    pub volume_on_startup: VolumeOnStartup,
 }
 
 fn default_true() -> bool {
@@ -30,6 +32,15 @@ pub enum PowerButtonAction {
     Suspend,
     Shutdown,
     Nothing,
+}
+
+/// What the volume is set to when the device powers on.
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, FromRepr, Default)]
+pub enum VolumeOnStartup {
+    /// Restore the volume the device was turned off at.
+    #[default]
+    Restore,
+    Muted,
 }
 
 impl PowerButtonAction {
@@ -56,6 +67,7 @@ impl Default for PowerSettings {
             auto_sleep_when_charging: false,
             auto_sleep_duration_minutes: 5,
             charging_screen: true,
+            volume_on_startup: VolumeOnStartup::Restore,
         }
     }
 }
